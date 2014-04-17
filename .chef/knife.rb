@@ -9,5 +9,5 @@ chef_server_url          "http://192.168.1.79:8000"
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
 cookbook_path            ["#{current_dir}/../cookbooks",
-                          "#{current_dir}/../role_cookbooks",
+                          "#{current_dir}/../runlist_cookbooks",
                           "#{current_dir}/../vendor_cookbooks"]
