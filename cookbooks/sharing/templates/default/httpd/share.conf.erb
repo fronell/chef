@@ -1,0 +1,8 @@
+Alias <%= "#{node['sharing']['http']['alias']} #{node['sharing']['http']['share_dir']}" %>
+
+<Directory <%= node['sharing']['http']['share_dir'] %>>
+    Options Indexes FollowSymLinks MultiViews
+    AllowOverride All
+    Order allow,deny
+    allow from all
+</Directory>

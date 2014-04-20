@@ -1,8 +1,3 @@
-# last seen recipes handler
-#require "last_seen_recipes"
-#last_seen_recipes_handler = LastSeenRecipesHandler.new
-#report_handlers << last_seen_recipes_handler
-
 log_level              :info
 log_location           STDOUT
 ssl_verify_mode        :verify_none
