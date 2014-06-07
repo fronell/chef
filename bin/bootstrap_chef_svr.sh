@@ -10,9 +10,6 @@ knife cookbook upload users
 knife cookbook upload yum
 knife cookbook upload linux_base
 knife cookbook upload linux_base-runlist
-knife cookbook upload build-essential
-knife cookbook upload mysql-chef_gem
-knife cookbook upload mysql
 knife cookbook upload database
 knife cookbook upload mysql-wrapper
 

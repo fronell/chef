@@ -17,4 +17,5 @@
 # limitations under the License.
 #
 
-include_recipe 'mysql-chef_gem'
+# We will build the the mysql-chef_gem using an alternative method
+#include_recipe 'mysql-chef_gem'
