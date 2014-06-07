@@ -77,6 +77,30 @@
 #
 #SET PASSWORD FOR 'jeffrey'@'localhost' = PASSWORD('cleartext password');
 
+
+# References
+# Loading a library that is dependent on a chef gem being installed first
+# https://sethvargo.com/using-gems-with-chef/
+# Another guy that couldn't figure out how to build a gem with options
+# https://gist.github.com/logikal/5833204
+
+# Could not figure out how to properly pass build options using the chef_gem
+# resource so it would fail each time it tried building the gym
+# The other mistake was using the --with-mysql-config to point to 
+# bin/mysql_config which would build the gem, but it when a require 'mysql'
+# was done, it would fail with:
+# libmysqlclient.so.18: cannot open shared object file: No such file or directory 
+# This is because its trying to find the libmysqlclient in a system library path
+# instead of the path provided by mysql_config.  The system path it checks for
+# is:
+# /usr/lib64/libmysqlclient.so.18
+# Not sure why mysql_config doesn't work, but it would not work for me
+# Another option is to use the following RPM's from Oracle:
+#rpm -i /vagrant/MySQL-5.6.19-1.rhel5.x86_64.rpm-bundle/MySQL-shared-5.6.19-1.rhel5.x86_64.rpm
+#rpm -i /vagrant/MySQL-5.6.19-1.rhel5.x86_64.rpm-bundle/MySQL-devel-5.6.19-1.rhel5.x86_64.rpm
+# Installing the above rpm's will allow the gem to build using the chef_gem
+# resource, but now yum will run into conflicts if it installs software that
+# has a dependency on the distribution mysql
 execute "/opt/chef/embedded/bin/gem install /vagrant/mysql-2.9.1.gem -- --with-mysql-dir=/vagrant/mysql-5.6.19-linux-glibc2.5-x86_64" do
   not_if "/opt/chef/embedded/bin/gem list | grep mysql"
 end
