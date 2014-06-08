@@ -101,8 +101,15 @@
 # Installing the above rpm's will allow the gem to build using the chef_gem
 # resource, but now yum will run into conflicts if it installs software that
 # has a dependency on the distribution mysql
-execute "/opt/chef/embedded/bin/gem install /vagrant/mysql-2.9.1.gem -- --with-mysql-dir=/vagrant/mysql-5.6.19-linux-glibc2.5-x86_64" do
-  not_if "/opt/chef/embedded/bin/gem list | grep mysql"
+execute "/opt/chef/embedded/bin/gem install mysql -- --with-mysql-dir=/vagrant/mysql-5.6.19-linux-glibc2.5-x86_64" do
+  # The space in the grep string is important to avoid false matches
+  not_if "/opt/chef/embedded/bin/gem list | grep 'mysql '"
+end
+
+# The mysql gem is actually deprecated and mysql2 has taken its place
+execute "/opt/chef/embedded/bin/gem install mysql2 -- --with-mysql-config=/vagrant/mysql-5.6.19-linux-glibc2.5-x86_64/bin/mysql_config" do
+  # The space in the grep string is important to avoid false matches
+  not_if "/opt/chef/embedded/bin/gem list | grep 'mysql2 '"
 end
 
 package 'mysql-server'
@@ -117,14 +124,38 @@ end
 
 include_recipe "database::mysql"
 
-def mysql_gem_installed?
-  cmd = '/opt/chef/embedded/bin/gem list | grep mysql'
+def mysql2_gem_installed?
+  cmd = "/opt/chef/embedded/bin/gem list | grep 'mysql2 '"
   system(cmd)
 end
 
-if mysql_gem_installed?
-  require 'mysql'
+# Since the gem is installed by chef, the require will fail on the 1st Chef
+# run because the gem isn't available immediately
+if mysql2_gem_installed?
   
+  def db_query(sql)
+    require 'mysql2'
+  
+    mysql2_conn_info = {
+      :host     => 'localhost',
+      :username => 'root',
+      :password => '',
+      :socket   => '/var/lib/mysql/mysql.sock'
+    }
+
+    # mysql gem method
+    #Mysql.new(
+    #  'localhost',
+    #  'root',
+    #  '',
+    #  nil,
+    #  3306,
+    #  '/var/lib/mysql/mysql.sock'
+    #).query(sql)
+
+    Mysql2::Client.new(mysql2_conn_info).query(sql)
+  end
+
   conn_info = {
     :host     => 'localhost',
     :username => 'root',
@@ -132,39 +163,37 @@ if mysql_gem_installed?
     :socket   => '/var/lib/mysql/mysql.sock'
   }
   
-  def db_query(sql)
-    Mysql.new(
-      'localhost',
-      'root',
-      '',
-      nil,
-      3306,
-      '/var/lib/mysql/mysql.sock'
-    ).query(sql)
-  end
-  
-  mysql_database 'oracle_rules' do
-    connection conn_info
-    action :create
-    # Doesn't work because hash can't be used to pass parameters
-    #not_if { ::Mysql.new(conn_info).query('select * from mysql.user').num_rows > 0 }
-    # Works
-    not_if { ::Mysql.new(
-      'localhost',
-      'root',
-      '',
-      nil,
-      3306,
-      '/var/lib/mysql/mysql.sock'
-    ).query('select * from mysql.user').num_rows > 0 }
-    # Doesn't work, throws the following error:
-    # I believe this is because when calling methods in the resource declaration, its
-    # using the methods only in the resource/provider class
-    # NoMethodError: undefined method `db_query' for Chef::Resource::MysqlDatabase
-    #not_if { db_query('select * from mysql.user').num_rows > 0 }
-    # Doesn't work, throws the following error:
-    # NoMethodError: undefined method `db' for Chef::Resource::MysqlDatabase
-    #not_if { db.query('select * from mysql.user').num_rows > 0 }
+  # Wrapping the resource in an if check is preferable to using an if check
+  # inside the resource because we can take advantage of functions we write
+  # within the recipe this way.  If you use it in side the resource, you get
+  # an undefined method error as noted below
+  # mysql gem check
+  #if db_query('select * from mysql.user').num_rows > 0
+  # mysql2 gem check
+  unless db_query('select * from mysql.user').size > 0
+    mysql_database 'oracle_rules' do
+      connection conn_info
+      action :create
+      # Doesn't work because hash can't be used to pass parameters
+      #not_if { ::Mysql.new(conn_info).query('select * from mysql.user').num_rows > 0 }
+      # Works
+      #not_if { ::Mysql.new(
+      #  'localhost',
+      #  'root',
+      #  '',
+      #  nil,
+      #  3306,
+      #  '/var/lib/mysql/mysql.sock'
+      #).query('select * from mysql.user').num_rows > 0 }
+      # Doesn't work, throws the following error:
+      # I believe this is because when calling methods in the resource declaration, its
+      # using the methods only in the resource/provider class
+      # NoMethodError: undefined method `db_query' for Chef::Resource::MysqlDatabase
+      #not_if { db_query('select * from mysql.user').num_rows > 0 }
+      # Doesn't work, throws the following error:
+      # NoMethodError: undefined method `db' for Chef::Resource::MysqlDatabase
+      #not_if { db.query('select * from mysql.user').num_rows > 0 }
+    end
   end
   
   mysql_database 'oracle_sucks' do
