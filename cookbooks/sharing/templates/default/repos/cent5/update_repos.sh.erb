@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#[=================CENTOS 5===================]
+#3rd Party
+#There is no reposync for 3rdparty since it is manually updated
+createrepo --update /data/share/repos/cent5/cent5-x64-3rdparty/
+#Updates
+/usr/bin/reposync -l -m -d --config=/data/share/repos/cent5/cent5-x64-updates/.origin/cent5-x64-updates.repo --repoid=cent5-x64-updates --download_path=/data/share/repos/cent5 -a x86_64
+createrepo --update /data/share/repos/cent5/cent5-x64-updates/
+#EPEL
+/usr/bin/reposync -l -m -d --config=/data/share/repos/cent5/cent5-x64-epel/.origin/cent5-x64-epel.repo --repoid=cent5-x64-epel --download_path=/data/share/repos/cent5 -a x86_64
+createrepo --update /data/share/repos/cent5/cent5-x64-epel/
+#Repoforge
+/usr/bin/reposync -l -m -d --config=/data/share/repos/cent5/cent5-x64-repoforge/.origin/cent5-x64-repoforge.repo --repoid=cent5-x64-repoforge --download_path=/data/share/repos/cent5 -a x86_64
+createrepo --update /data/share/repos/cent5/cent5-x64-repoforge/
+#Extras
+/usr/bin/reposync -l -m -d --config=/data/share/repos/cent5/cent5-x64-extras/.origin/cent5-x64-extras.repo --repoid=cent5-x64-extras --download_path=/data/share/repos/cent5 -a x86_64
+createrepo --update /data/share/repos/cent5/cent5-x64-extras/
+#Base
+/usr/bin/reposync -l -m -d --config=/data/share/repos/cent5/cent5-x64-base/.origin/cent5-x64-base.repo --repoid=cent5-x64-base --download_path=/data/share/repos/cent5 -a x86_64
+createrepo --update /data/share/repos/cent5/cent5-x64-base/
